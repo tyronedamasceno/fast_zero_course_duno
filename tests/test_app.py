@@ -1,5 +1,7 @@
 from http import HTTPStatus
 
+from fast_zero.schemas import UserPublic
+
 
 def test_read_root_should_return_ok_and_hello_world(client):
     response = client.get('/')
@@ -25,42 +27,65 @@ def test_create_user(client):
     }
 
 
-def test_read_user(client):
-    response = client.get('/users/1')
+def test_create_user_validate_unique_email_and_username(client, user):
+    response = client.post(
+        '/users/',
+        json={
+            'username': user.username,
+            'password': 'password',
+            'email': 'new_email@test.com',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Username already exists'}
+
+    response = client.post(
+        '/users/',
+        json={
+            'username': 'new_username',
+            'password': 'password',
+            'email': user.email,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Email already exists'}
+
+
+def test_read_user(client, user):
+    user_schema = UserPublic.model_validate(user).model_dump()
+    response = client.get(f'/users/{user.id}')
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
-        'id': 1,
-        'username': 'user',
-        'email': 'user@test.com',
-    }
+    assert response.json() == user_schema
 
 
-def test_read_user_not_found(client):
-    response = client.get('/users/2')
+def test_read_user_not_found(client, user):
+    response = client.get(f'/users/{user.id + 1}')
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'User not found'}
 
 
-def test_read_users(client):
+def test_read_users_empty_db(client):
     response = client.get('/users/')
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
-        'users': [
-            {
-                'id': 1,
-                'username': 'user',
-                'email': 'user@test.com',
-            }
-        ]
-    }
+    assert response.json() == {'users': []}
 
 
-def test_update_user(client):
+def test_read_users(client, user):
+    user_schema = UserPublic.model_validate(user).model_dump()
+    response = client.get('/users/')
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'users': [user_schema]}
+
+
+def test_update_user(client, user):
     response = client.put(
-        '/users/1',
+        f'/users/{user.id}',
         json={
             'username': 'new_user',
             'password': 'password',
@@ -76,9 +101,9 @@ def test_update_user(client):
     }
 
 
-def test_update_user_not_found(client):
+def test_update_user_not_found(client, user):
     response = client.put(
-        '/users/2',
+        f'/users/{user.id + 1}',
         json={
             'username': 'new_user',
             'password': 'password',
@@ -90,13 +115,13 @@ def test_update_user_not_found(client):
     assert response.json() == {'detail': 'User not found'}
 
 
-def test_delete_user(client):
-    response = client.delete('/users/1')
+def test_delete_user(client, user):
+    response = client.delete(f'/users/{user.id}')
 
     assert response.status_code == HTTPStatus.NO_CONTENT
 
 
-def test_delete_user_not_found(client):
-    response = client.delete('/users/2')
+def test_delete_user_not_found(client, user):
+    response = client.delete(f'/users/{user.id + 1}')
 
     assert response.status_code == HTTPStatus.NOT_FOUND
