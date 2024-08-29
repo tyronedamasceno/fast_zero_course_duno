@@ -66,13 +66,8 @@ def read_user(
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail='Not enough permission'
         )
-    user = session.scalar(select(User).where(User.id == user_id))
-    if user is None:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
-        )
 
-    return user
+    return current_user
 
 
 @app.get('/users/', response_model=UserList)
@@ -80,7 +75,6 @@ def read_users(
     limit: int = 10,
     skip: int = 0,
     session: Session = Depends(get_session),
-    current_user=Depends(get_current_user),
 ):
     users = session.scalars(select(User).limit(limit).offset(skip))
     return {'users': users}
@@ -98,20 +92,14 @@ def update_user(
             status_code=HTTPStatus.FORBIDDEN, detail='Not enough permission'
         )
 
-    db_user = session.scalar(select(User).where(User.id == user_id))
-    if db_user is None:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
-        )
-
-    db_user.username = user.username
-    db_user.email = user.email
-    db_user.password = get_password_hash(user.password)
+    current_user.username = user.username
+    current_user.email = user.email
+    current_user.password = get_password_hash(user.password)
 
     session.commit()
-    session.refresh(db_user)
+    session.refresh(current_user)
 
-    return db_user
+    return current_user
 
 
 @app.delete('/users/{user_id}', status_code=HTTPStatus.NO_CONTENT)
@@ -125,13 +113,7 @@ def delete_user(
             status_code=HTTPStatus.FORBIDDEN, detail='Not enough permission'
         )
 
-    user = session.scalar(select(User).where(User.id == user_id))
-    if user is None:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
-        )
-
-    session.delete(user)
+    session.delete(current_user)
     session.commit()
 
 
