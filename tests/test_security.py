@@ -26,10 +26,10 @@ def test_jwt():
 def test_get_current_user_invalid_token():
     with mock.patch('fast_zero.security.decode', side_effect=PyJWTError):
         with pytest.raises(HTTPException) as exc_info:
-            get_current_user(token="invalid_token")
+            get_current_user(token='invalid_token')
 
     assert exc_info.value.status_code == HTTPStatus.UNAUTHORIZED
-    assert exc_info.value.detail == "Could not validate credentials"
+    assert exc_info.value.detail == 'Could not validate credentials'
 
 
 def test_get_current_user_with_token_without_username_sub():
