@@ -6,18 +6,15 @@ from fastapi import HTTPException
 from jwt import decode, encode
 from jwt.exceptions import PyJWTError
 
-from fast_zero.security import (
-    ALGORITHM,
-    SECRET_KEY,
-    create_access_token,
-    get_current_user,
-)
+from fast_zero.security import create_access_token, get_current_user, settings
 
 
 def test_jwt():
     data = {'sub': 'test@test.com'}
     token = create_access_token(data)
-    result = decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    result = decode(
+        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+    )
 
     assert result['sub'] == data['sub']
     assert result['exp']
@@ -33,7 +30,9 @@ def test_get_current_user_invalid_token():
 
 
 def test_get_current_user_with_token_without_username_sub():
-    token = encode({'foo': 'bar'}, SECRET_KEY, algorithm=ALGORITHM)
+    token = encode(
+        {'foo': 'bar'}, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
 
     with pytest.raises(HTTPException) as exc_info:
         get_current_user(token=token)
@@ -44,7 +43,9 @@ def test_get_current_user_with_token_without_username_sub():
 
 def test_get_current_user_with_token_with_invalid_username_sub(session):
     token = encode(
-        {'sub': 'invalid_username'}, SECRET_KEY, algorithm=ALGORITHM
+        {'sub': 'invalid_username'},
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
     )
 
     with pytest.raises(HTTPException) as exc_info:
