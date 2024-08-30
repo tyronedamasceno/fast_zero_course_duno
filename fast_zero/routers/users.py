@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
 from fast_zero.annotated_types import T_CurrentUser, T_Session
+from fast_zero.decorators import check_user_permission
 from fast_zero.models import User
 from fast_zero.schemas import UserList, UserPublic, UserSchema
 from fast_zero.security import get_password_hash
@@ -45,12 +46,8 @@ def create_user(user: UserSchema, session: T_Session):
 
 
 @router.get('/{user_id}', response_model=UserPublic)
+@check_user_permission
 def read_user(user_id: int, current_user: T_CurrentUser):
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail='Not enough permission'
-        )
-
     return current_user
 
 
@@ -61,17 +58,13 @@ def read_users(session: T_Session, limit: int = 10, skip: int = 0):
 
 
 @router.put('/{user_id}', response_model=UserPublic)
+@check_user_permission
 def update_user(
     user_id: int,
     user: UserSchema,
     session: T_Session,
     current_user: T_CurrentUser,
 ):
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail='Not enough permission'
-        )
-
     current_user.username = user.username
     current_user.email = user.email
     current_user.password = get_password_hash(user.password)
@@ -83,11 +76,7 @@ def update_user(
 
 
 @router.delete('/{user_id}', status_code=HTTPStatus.NO_CONTENT)
+@check_user_permission
 def delete_user(user_id: int, session: T_Session, current_user: T_CurrentUser):
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail='Not enough permission'
-        )
-
     session.delete(current_user)
     session.commit()
