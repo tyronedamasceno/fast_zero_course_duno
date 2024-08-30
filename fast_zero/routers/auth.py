@@ -3,9 +3,8 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from fast_zero.database import get_session
+from fast_zero.annotated_types import T_Session
 from fast_zero.models import User
 from fast_zero.security import (
     create_access_token,
@@ -17,8 +16,8 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 
 @router.post('/token')
 def login_for_access_token(
+    session: T_Session,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    session: Session = Depends(get_session),
 ):
     user = session.scalar(
         select(User).where(User.username == form_data.username)
