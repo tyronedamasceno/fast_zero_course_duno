@@ -23,12 +23,10 @@ def test_jwt():
     assert result['exp']
 
 
-@mock.patch('fast_zero.security.decode', side_effect=PyJWTError)
-def test_get_current_user_invalid_token(mock_decode):
-    mock_session = mock.Mock()
-
-    with pytest.raises(HTTPException) as exc_info:
-        get_current_user(session=mock_session, token="invalid_token")
+def test_get_current_user_invalid_token():
+    with mock.patch('fast_zero.security.decode', side_effect=PyJWTError):
+        with pytest.raises(HTTPException) as exc_info:
+            get_current_user(token="invalid_token")
 
     assert exc_info.value.status_code == HTTPStatus.UNAUTHORIZED
     assert exc_info.value.detail == "Could not validate credentials"
