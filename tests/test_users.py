@@ -58,9 +58,9 @@ def test_read_user(client, user, token):
     assert response.json() == user_schema
 
 
-def test_read_other_user_not_allowed(client, user, token):
+def test_read_other_user_not_allowed(client, user2, token):
     response = client.get(
-        f'/users/{user.id + 1}',
+        f'/users/{user2.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
 
@@ -106,9 +106,9 @@ def test_update_user(client, user, token):
     }
 
 
-def test_update_other_user_not_allowed(client, user, token):
+def test_update_other_user_not_allowed(client, user2, token):
     response = client.put(
-        f'/users/{user.id + 1}',
+        f'/users/{user2.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'new_user',
@@ -130,9 +130,9 @@ def test_delete_user(client, user, token):
     assert response.status_code == HTTPStatus.NO_CONTENT
 
 
-def test_delete_user_other_user_not_allowed(client, user, token):
+def test_delete_user_other_user_not_allowed(client, user2, token):
     response = client.delete(
-        f'/users/{user.id + 1}',
+        f'/users/{user2.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
 
