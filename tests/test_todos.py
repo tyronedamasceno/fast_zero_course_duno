@@ -99,9 +99,7 @@ def test_delete_todo_not_found(client, token):
 
 def test_patch_todo_invalid_id(client, token):
     response = client.patch(
-        '/todos/10',
-        headers={'Authorization': f'Bearer {token}'},
-        json={}
+        '/todos/10', headers={'Authorization': f'Bearer {token}'}, json={}
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
@@ -119,8 +117,8 @@ def test_patch_todo(client, token, user, session):
         json={
             'title': 'test title',
             'description': 'test description',
-            'state': 'done'
-        }
+            'state': 'done',
+        },
     )
 
     assert response.status_code == HTTPStatus.OK
