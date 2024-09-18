@@ -27,7 +27,7 @@ def create_todo(todo: TodoSchema, session: T_Session, user: T_CurrentUser):
 
 
 @router.get('/', response_model=TodoList)
-def list_todos(
+def list_todos( # noqa
     session: T_Session,
     user: T_CurrentUser,
     title: str | None = None,
